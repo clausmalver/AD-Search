@@ -23,7 +23,7 @@ Get a list of avaible packages.
 ```powershell
 Get-WindowsCapability -Name RSAT* -Online``
 ```
-
+In this case you want the *Active Directory Domain Services and Lightweight Directory Services Tools*
 ```powershell
 Add-WindowsCapability -online -Name "<tool name>"
 ```
