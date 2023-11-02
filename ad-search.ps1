@@ -47,9 +47,6 @@ function Search-User {
         Write-Host "An error occurred while searching for the user: $_"
     }
 }
-
-
-
 function Search-Group {
     param (
         [string]$groupname
@@ -74,8 +71,6 @@ function Search-Group {
         Write-Host "An error occurred while searching for the group: $_"
     }
 }
-
-
 function Get-UserGroupsList {
     param (
         [string]$username
@@ -176,12 +171,12 @@ function Get-MyUserInfo {
 
         $userGroups = Get-ADPrincipalGroupMembership $userPrincipalName | Select-Object Name
         if ($userGroups) {
-            Write-Host "Member of the following groups:"
+            Write-Host "$fullName is member of the following groups:"
             $userGroups | ForEach-Object {
                 Write-Host "  - $($_.Name)"
             }
         } else {
-            Write-Host "User is not a member of any groups."
+            Write-Host "$fullName is not a member of any groups."
         }
     } else {
         Write-Host "User not found."
@@ -203,17 +198,18 @@ while ($true) {
    v. 0.6.5 @ Scope edition by Claus Malver                                                                                                                                                 
                                                
 
-AD-Search - Active Directory CLI
+AD-Search - Active Directory
 Available Commands:
 1. Search for username
-2. Search for group
-3. List groups user is a member of
+2. Search for a group
+3. List groups a specific user is a member of
 4. List members of a group
 5. Full report on an user
-6. Exit
+6. Get full report on your current user
+7. Exit
 "@
 
-    $choice = Read-Host "Enter a command (1-5):"
+    $choice = Read-Host "Enter a command (1-7):"
 
     switch ($choice) {
         '1' {
