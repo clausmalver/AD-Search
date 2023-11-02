@@ -9,4 +9,4 @@
 
 ## Reporting a Vulnerability
 
-If you find anything write me an email at malver[at]protonmail[dot]com
+If you find anything, write me an email at malver[at]protonmail[dot]com

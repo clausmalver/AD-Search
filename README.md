@@ -5,7 +5,7 @@ Please feel free to use it as you please and modify it to make it suit your use 
 
 You might need to use `set ExecutionPolicy Unrestricted` in a powershell terminal to get it work.
 
-### Installation of RSAT tools in Windows
+## Installation of RSAT tools in Windows
 
 This script is based on the cmdlet of the RSAT ActiveDirectory cmdlets, and to get this script to work you need the RSAT tools.
 
@@ -22,7 +22,7 @@ net start wuauserv
 ```
 Get a list of avaible packages.
 ```powershell
-Get-WindowsCapability -Name RSAT* -Online``
+Get-WindowsCapability -Name RSAT* -Online
 ```
 In this case you want the *Active Directory Domain Services and Lightweight Directory Services Tools*.
 ```powershell

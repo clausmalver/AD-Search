@@ -234,12 +234,11 @@ Available Commands:
             Get-GroupMemberslist $groupname
         }
         '5' {
-            $groupname = Read-Host "Enter the username for full report:"
+            $groupname = Read-Host "Enter the username for a full report:"
             Get-UserReport $groupname
         }
         '6' {
-            $groupname = Read-Host "Enter the username for full report:"
-            Get-MyUserInfo $groupname
+            Get-MyUserInfo
         }
         '7' {
             exit
