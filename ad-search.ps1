@@ -6,7 +6,7 @@ A script to use as a daily driver when troubleshooting or engaging with users du
 This script is made to help during support or find infomation about users or group when troubleshooting for errors or similar.
 It is dependent on the Module "ActiveDirectory" and its cmdlets which is used to gather information and display it.
 
-More information can be found at https://https://github.com/clausmalver/AD-Search
+More information can be found at https://github.com/clausmalver/AD-Search
 
 Thanks!
 
