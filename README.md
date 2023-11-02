@@ -1,4 +1,6 @@
 # AD-Search
  A powershell script utilizing AD cmdlets to search for information.
 
-A small project used to find quick info about users or group in an AD enviroment.
+A small project used to find information about users or groups in an Active Directory invironment. The script is based on "read" rights only, so it's not possible to mess anything up.
+
+Please feel free to use it as you please and modify it to make it suit your use case.

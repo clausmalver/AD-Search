@@ -3,8 +3,12 @@
 A script to use as a daily driver when troubleshooting or engaging with users during support.
 
 .DESCRIPTION
-This script is made to help me during support or find infomation about users or group when troubleshooting for errors or similar.
+This script is made to help during support or find infomation about users or group when troubleshooting for errors or similar.
 It is dependent on the Module "ActiveDirectory" and its cmdlets which is used to gather information and display it.
+
+More information can be found at https://https://github.com/clausmalver/AD-Search
+
+Thanks!
 
 .NOTES
 Script Name: ad_search.ps1
@@ -16,7 +20,6 @@ Last Modified: 2023-11-02
 # Import the Active Directory module
 Import-Module ActiveDirectory
 
-# Define functions for your search operations
 function Search-User {
     param (
         [string]$username
@@ -159,6 +162,31 @@ function Get-UserReport {
         Write-Host "An error occurred while generating the user report: $_"
     }
 }
+function Get-MyUserInfo {
+    $currentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent()
+    $user = Get-ADUser -Filter {SamAccountName -eq $currentUser.Name} -Properties DisplayName,UserPrincipalName
+
+    if ($user) {
+        $fullName = $user.DisplayName
+        $userPrincipalName = $user.UserPrincipalName
+
+        Write-Host "User Information for: $userPrincipalName"
+        Write-Host "Full Name: $fullName"
+        Write-Host "User Principal Name: $userPrincipalName"
+
+        $userGroups = Get-ADPrincipalGroupMembership $userPrincipalName | Select-Object Name
+        if ($userGroups) {
+            Write-Host "Member of the following groups:"
+            $userGroups | ForEach-Object {
+                Write-Host "  - $($_.Name)"
+            }
+        } else {
+            Write-Host "User is not a member of any groups."
+        }
+    } else {
+        Write-Host "User not found."
+    }
+}
 
 
 # Main program loop
@@ -181,7 +209,7 @@ Available Commands:
 2. Search for group
 3. List groups user is a member of
 4. List members of a group
-5. Full report on user
+5. Full report on an user
 6. Exit
 "@
 
@@ -209,6 +237,10 @@ Available Commands:
             Get-UserReport $groupname
         }
         '6' {
+            $groupname = Read-Host "Enter the username for full report:"
+            Get-MyUserInfo $groupname
+        }
+        '7' {
             exit
         }
         default {
