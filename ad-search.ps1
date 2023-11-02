@@ -17,8 +17,13 @@ Version: 0.6.5
 Last Modified: 2023-11-02
 #>
 
-# Import the Active Directory module
-Import-Module ActiveDirectory
+# Check if the ActiveDirectory module is available
+if (-not (Get-Module -Name ActiveDirectory)) {
+    Write-Host "The ActiveDirectory module is not available. Please visit the following website for installation instructions:"
+    Write-Host "Website: https://github.com/clausmalver/AD-Search/blob/main/README.md"
+    exit
+}
+
 
 function Search-User {
     param (
