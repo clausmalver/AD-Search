@@ -31,20 +31,26 @@ function Search-User {
     )
 
     try {
-        $user = Get-ADUser -Filter {SamAccountName -eq $username} -Properties DisplayName,LastLogon,WhenCreated,Enabled,UserPrincipalName
+        $user = Get-ADUser -Filter {SamAccountName -eq $username} -Properties DisplayName,LastLogon,WhenCreated,Enabled,UserPrincipalName,EmailAddress,LockedOut,Manager
         if ($user) {
             $fullName = $user.DisplayName
             $lastLogon = [DateTime]::FromFileTime($user.LastLogon)
             $creationDate = $user.WhenCreated
             $enabled = $user.Enabled
+            $emailAddress = $user.EmailAddress
+            $lockedOut = if ($user.LockedOut) { "Locked Out" } else { "Not Locked Out" }
+            $manager = $user.Manager
 
             # Determine the account status
             $accountStatus = if ($enabled) { "Enabled" } else { "Disabled" }
 
             Write-Host "User: $fullName"
+            Write-Host "Email Address: $emailAddress"
             Write-Host "Last Active: $lastLogon"
             Write-Host "Created: $creationDate"
             Write-Host "Account Status: $accountStatus"
+            Write-Host "Locked Out Status: $lockedOut"
+            Write-Host "Manager: $manager"
         } else {
             Write-Host "User not found."
         }
@@ -52,6 +58,7 @@ function Search-User {
         Write-Host "An error occurred while searching for the user: $_"
     }
 }
+
 function Search-Group {
     param (
         [string]$groupname
@@ -132,7 +139,7 @@ function Get-UserReport {
     )
 
     try {
-        $user = Get-ADUser -Filter {SamAccountName -eq $username} -Properties DisplayName,UserPrincipalName,LastLogon,WhenCreated,Enabled,LockedOut,PasswordLastSet,PasswordNeverExpires,PasswordExpired
+        $user = Get-ADUser -Filter {SamAccountName -eq $username} -Properties DisplayName,UserPrincipalName,LastLogon,WhenCreated,Enabled,LockedOut,PasswordLastSet,PasswordNeverExpires,PasswordExpired,EmailAddress,Manager
 
         if ($user) {
             $fullName = $user.DisplayName
@@ -148,6 +155,7 @@ function Get-UserReport {
             Write-Host "User Report for: $username"
             Write-Host "Full Name: $fullName"
             Write-Host "User Principal Name: $userPrincipalName"
+            Write-Host "Email Address: $emailAddress"
             Write-Host "Last Logon: $lastLogon"
             Write-Host "Created: $creationDate"
             Write-Host "Account Status: $accountStatus"
@@ -155,6 +163,8 @@ function Get-UserReport {
             Write-Host "Password Last Set: $passwordLastSet"
             Write-Host "Password Never Expires: $passwordNeverExpires"
             Write-Host "Password Expired: $passwordExpired"
+            Write-Host "Manager: $manager"
+            
         } else {
             Write-Host "User not found."
         }
@@ -187,7 +197,29 @@ function Get-MyUserInfo {
         Write-Host "User not found."
     }
 }
-
+function Build-OUTree($username, $depth = 0) {
+    $user = Get-ADUser -Identity $username
+    $userDN = $user.DistinguishedName
+    $ouHierarchy = $userDN -split "," | ForEach-Object {
+        $_ -replace "CN=", "" -replace "OU=", ""
+    }
+    
+    $ouPath = ""
+    $ouTree = @()
+    
+    for ($i = 0; $i -lt $depth; $i++) {
+        $ouPath += "|   "
+    }
+    
+    $ouTree += "$ouPath|-- " + $ouHierarchy[0]
+    
+    for ($i = 1; $i -lt $ouHierarchy.Count; $i++) {
+        $ouPath += "|   "
+        $ouTree += "$ouPath|-- " + $ouHierarchy[$i]
+    }
+    
+    $ouTree
+}
 
 # Main program loop
 while ($true) {
@@ -210,11 +242,12 @@ Available Commands:
 3. List groups a specific user is a member of
 4. List members of a group
 5. Full report on an user
-6. Get full report on your current user
-7. Exit
+6. Get a small report on your current user
+7. Get a "tree" structure of what OU's a user is a member of
+0. Exit
 "@
 
-    $choice = Read-Host "Enter a command (1-7):"
+    $choice = Read-Host "Enter a command (1-8):"
 
     switch ($choice) {
         '1' {
@@ -241,6 +274,15 @@ Available Commands:
             Get-MyUserInfo
         }
         '7' {
+            $username = Read-Host "Enter the username for OU tree structure:"
+            $ouTree = Build-OUTree $username
+        
+            Write-Host "OU Tree Structure for User: $username"
+            $ouTree | ForEach-Object {
+                Write-Host $_
+            }
+        }
+        '0' {
             exit
         }
         default {
