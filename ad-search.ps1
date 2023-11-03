@@ -72,6 +72,54 @@ function Search-User {
     }
 }
 
+function Search-UserByEmployeeNumber {
+    param (
+        [string]$EmployeeNumber
+    )
+
+    # Log the search
+    Add-Log-Search -type "User EmployeeNumber Search" -name $EmployeeNumber
+
+    try {
+        $user = Get-ADUser -Filter {EmployeeNumber -like "*$EmployeeNumber"} -Properties DisplayName,LastLogon,WhenCreated,Enabled,UserPrincipalName,EmailAddress,LockedOut,Manager,BadLogonCount
+        if ($user) {
+            $fullName = $user.DisplayName
+            $lastLogon = [DateTime]::FromFileTime($user.LastLogon)
+            $creationDate = $user.WhenCreated
+            $enabled = $user.Enabled
+            $emailAddress = $user.EmailAddress
+            $lockedOut = if ($user.LockedOut) { "Locked Out" } else { "Not Locked Out" }
+            $manager = $user.Manager
+            $badlogoncount = $user.BadLogonCount
+
+            # Determine the account status
+            $accountStatus = if ($enabled) { "Enabled" } else { "Disabled" }
+
+            # Extract the manager's display name
+            $manager = $user.Manager
+            if ($manager) {
+                $managerUser = Get-ADUser -Identity $manager
+                $managerDisplayName = $managerUser.DisplayName
+            } else {
+                $managerDisplayName = "N/A"
+            }
+
+            Write-Host "User: $fullName"
+            Write-Host "Email Address: $emailAddress"
+            Write-Host "Last Active: $lastLogon"
+            Write-Host "Created: $creationDate"
+            Write-Host "Account Status: $accountStatus"
+            Write-Host "Locked Out Status: $lockedOut"
+            Write-Host "Failed logon attempts: $badlogoncount"
+            Write-Host "Manager: $manager ($managerDisplayName)"
+        } else {
+            Write-Host "User not found."
+        }
+    } catch {
+        Write-Host "An error occurred while searching for the user: $_"
+    }
+}
+
 function Search-Group {
     param (
         [string]$groupname
@@ -222,16 +270,19 @@ function Get-MyUserInfo {
     } catch {
     Write-Host "An error occurred while getting user info: $_"
     }
+    
     function Build-OUTree {
         param (
             [string]$username
         )
+    
         # Log the OU tree building operation
         Add-Log-Search -type "OU Tree Building" -name $username
-
+    
         try {
             $user = Get-ADUser -Identity $username -Properties DistinguishedName
             $ouTree = @()
+            $level = 0
     
             if ($user) {
                 $distinguishedName = $user.DistinguishedName
@@ -239,12 +290,13 @@ function Get-MyUserInfo {
     
                 while ($ouPath -notmatch "^DC=") {
                     $ou = Get-ADOrganizationalUnit -Filter {DistinguishedName -eq $ouPath}
-                    $ouTree += $ou.Name
+                    $ouTree += (" " * $level + "|-- " + $ou.Name)
                     $ouPath = ($ouPath -split ",",2)[1]
+                    $level += 2
                 }
             }
     
-            return $ouTree
+            return $ouTree -join "`n"
         } catch {
             Write-Host "An error occurred while building the OU tree: $_"
         }
@@ -267,10 +319,6 @@ function Get-ManagerDisplayName {
         Write-Host "An error occurred while getting the manager's display name: $_"
     }
 }
-
-# Example of how to use the Get-ManagerDisplayName function
-# $managerDisplayName = Get-ManagerDisplayName $user.Manager
-# Write-Host "Manager: $user.Manager ($managerDisplayName)"
 
 #Logging functionality
 function Add-Log-Search {
@@ -303,22 +351,23 @@ while ($true) {
    | | | || |/ /         /\__/ /|  __/| (_| || |   | (__ | | | |
    \_| |_/|___/          \____/  \___| \__,_||_|    \___||_| |_|
    
-   v. 0.6.5 @ Scope edition by Claus Malver                                                                                                                                                 
+   version 0.6.5 @ Scope edition by Claus Malver                                                                                                                                                 
                                                
 
 AD-Search - Active Directory
 Available Commands:
 1. Search for username
-2. Search for a group
-3. List groups a specific user is a member of
-4. List members of a group
-5. Full report on an user
-6. Get a small report on your current user
-7. Get a "tree" structure of what OU's a user is a member of
+2. Search for EmployeeNumber
+3. Search for a group
+4. List groups a specific user is a member of
+5. List members of a group
+6. Full report on an user
+7. Get a small report on your current user
+8. Get a "tree" structure of what OU's a user is a member of
 0. Exit
 "@
 
-    $choice = Read-Host "Enter a command (1-8):"
+    $choice = Read-Host "Enter a command (1-8) or enter 0 to exit:"
     try {
         switch ($choice) {
         '1' {
@@ -326,25 +375,29 @@ Available Commands:
             Search-User $username
         }
         '2' {
+            $username = Read-Host "Enter the username:"
+            Search-UserByEmployeeNumber $EmployeeNumber
+        }
+        '3' {
             $groupname = Read-Host "Enter the group name:"
             Search-Group $groupname
         }
-        '3' {
+        '4' {
             $username = Read-Host "Enter the username:"
             Get-UserGroupsList $username
         }
-        '4' {
+        '5' {
             $groupname = Read-Host "Enter the group name:"
             Get-GroupMemberslist $groupname
         }
-        '5' {
+        '6' {
             $groupname = Read-Host "Enter the username for a full report:"
             Get-UserReport $groupname
         }
-        '6' {
+        '7' {
             Get-MyUserInfo
         }
-        '7' {
+        '8' {
             $username = Read-Host "Enter the username for OU tree structure:"
             $ouTree = Build-OUTree $username
         
