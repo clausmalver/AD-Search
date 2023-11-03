@@ -367,7 +367,7 @@ Available Commands:
 0. Exit
 "@
 
-    $choice = Read-Host "Enter a command (1-8) or enter 0 to exit:"
+    $choice = Read-Host "Enter a command (1-8) or press 0 to exit:"
     try {
         switch ($choice) {
         '1' {
@@ -375,7 +375,7 @@ Available Commands:
             Search-User $username
         }
         '2' {
-            $username = Read-Host "Enter the username:"
+            $username = Read-Host "Enter the users employee number:"
             Search-UserByEmployeeNumber $EmployeeNumber
         }
         '3' {
