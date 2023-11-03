@@ -28,3 +28,17 @@ In this case you want the *Active Directory Domain Services and Lightweight Dire
 ```powershell
 Add-WindowsCapability -online -Name "<tool name>"
 ```
+
+## Logging
+There are a basic logging function in this script, the log will be saved at the `%temp%/adsearch/logfile.txt` which will look like:
+```
+2022-03-14 15:30:00 - User Search : <username>
+```
+The following functions will be logged:
+
+- Search for username
+- Search for a group
+- List groups a specific user is a member of
+- List members of a group
+- Full report on an user
+- Get a "tree" structure of what OU's a user is a member of
