@@ -24,14 +24,16 @@ if (-not (Get-Module -Name ActiveDirectory)) {
     exit
 }
 
-
 function Search-User {
     param (
         [string]$username
     )
 
+    # Log the search
+    Add-Log-Search -type "User Search" -name $username
+
     try {
-        $user = Get-ADUser -Filter {SamAccountName -eq $username} -Properties DisplayName,LastLogon,WhenCreated,Enabled,UserPrincipalName,EmailAddress,LockedOut,Manager
+        $user = Get-ADUser -Filter {SamAccountName -eq $username} -Properties DisplayName,LastLogon,WhenCreated,Enabled,UserPrincipalName,EmailAddress,LockedOut,Manager,BadLogonCount
         if ($user) {
             $fullName = $user.DisplayName
             $lastLogon = [DateTime]::FromFileTime($user.LastLogon)
@@ -40,9 +42,19 @@ function Search-User {
             $emailAddress = $user.EmailAddress
             $lockedOut = if ($user.LockedOut) { "Locked Out" } else { "Not Locked Out" }
             $manager = $user.Manager
+            $badlogoncount = $user.BadLogonCount
 
             # Determine the account status
             $accountStatus = if ($enabled) { "Enabled" } else { "Disabled" }
+
+            # Extract the manager's display name
+            $manager = $user.Manager
+            if ($manager) {
+                $managerUser = Get-ADUser -Identity $manager
+                $managerDisplayName = $managerUser.DisplayName
+            } else {
+                $managerDisplayName = "N/A"
+            }
 
             Write-Host "User: $fullName"
             Write-Host "Email Address: $emailAddress"
@@ -50,7 +62,8 @@ function Search-User {
             Write-Host "Created: $creationDate"
             Write-Host "Account Status: $accountStatus"
             Write-Host "Locked Out Status: $lockedOut"
-            Write-Host "Manager: $manager"
+            Write-Host "Failed logon attempts: $badlogoncount"
+            Write-Host "Manager: $manager ($managerDisplayName)"
         } else {
             Write-Host "User not found."
         }
@@ -63,6 +76,9 @@ function Search-Group {
     param (
         [string]$groupname
     )
+    
+    # Log the search
+    Add-Log-Search -type "Group Search" -name $groupname
 
     try {
         $group = Get-ADGroup -Filter {SamAccountName -eq $groupname} -Properties Members, ObjectGUID, Description
@@ -74,8 +90,8 @@ function Search-Group {
 
             Write-Host "Group: $groupname"
             Write-Host "Members Count: $membersCount"
-            Write-Host "GUID: $guid"
             Write-Host "Description: $description"
+            Write-Host "GUID: $guid"
         } else {
             Write-Host "Group not found."
         }
@@ -87,7 +103,10 @@ function Get-UserGroupsList {
     param (
         [string]$username
     )
-
+   
+    # Log the search
+    Add-Log-Search -type "User Groups List" -name $username
+   
     try {
         $user = Get-ADUser -Filter {SamAccountName -eq $username} -Properties MemberOf
 
@@ -111,6 +130,9 @@ function Get-GroupMemberslist {
     param (
         [string]$groupname
     )
+    
+    # Log the search
+    Add-Log-Search -type "Group Members List" -name $groupname
 
     try {
         $group = Get-ADGroup -Filter {SamAccountName -eq $groupname} -Properties Members
@@ -133,38 +155,38 @@ function Get-GroupMemberslist {
         Write-Host "An error occurred while listing group members: $_"
     }
 }
+
 function Get-UserReport {
     param (
         [string]$username
     )
+    # Log the user report generation
+    Add-Log-Search -type "User Report" -name $username    
 
     try {
-        $user = Get-ADUser -Filter {SamAccountName -eq $username} -Properties DisplayName,UserPrincipalName,LastLogon,WhenCreated,Enabled,LockedOut,PasswordLastSet,PasswordNeverExpires,PasswordExpired,EmailAddress,Manager
+        $user = Get-ADUser -Filter {SamAccountName -eq $username} -Properties DisplayName, SamAccountName, Manager, LastLogon, WhenCreated, Enabled, LockedOut, PasswordLastSet, badPwdCount, Office, Department, Company, StreetAddress, City, OfficePhone, otherMobile
 
         if ($user) {
-            $fullName = $user.DisplayName
-            $userPrincipalName = $user.UserPrincipalName
-            $lastLogon = [DateTime]::FromFileTime($user.LastLogon)
-            $creationDate = $user.WhenCreated
-            $accountStatus = if ($user.Enabled) { "Enabled" } else { "Disabled" }
-            $lockedOut = if ($user.LockedOut) { "Yes" } else { "No" }
-            $passwordLastSet = [DateTime]::FromFileTime($user.PasswordLastSet)
-            $passwordNeverExpires = $user.PasswordNeverExpires
-            $passwordExpired = $user.PasswordExpired
+            $managerDisplayName = Get-ManagerDisplayName $user.Manager
 
-            Write-Host "User Report for: $username"
-            Write-Host "Full Name: $fullName"
-            Write-Host "User Principal Name: $userPrincipalName"
-            Write-Host "Email Address: $emailAddress"
-            Write-Host "Last Logon: $lastLogon"
-            Write-Host "Created: $creationDate"
-            Write-Host "Account Status: $accountStatus"
-            Write-Host "Locked Out: $lockedOut"
-            Write-Host "Password Last Set: $passwordLastSet"
-            Write-Host "Password Never Expires: $passwordNeverExpires"
-            Write-Host "Password Expired: $passwordExpired"
-            Write-Host "Manager: $manager"
-            
+            $userReport = [PSCustomObject]@{
+                'Full Name' = $user.DisplayName
+                'SAM Account Name' = $user.SamAccountName
+                'Manager' = $managerDisplayName
+                'Office' = $user.Office
+                'Department' = $user.Department
+                'Company' = $user.Company
+                'Address' = "$($user.StreetAddress), $($user.City)"
+                'Phone' = "$($user.OfficePhone), $($user.otherMobile)"
+                'Created' = $user.WhenCreated
+                'Account Status' = if ($user.Enabled) { "Enabled" } else { "Disabled" }
+                'Locked Out' = if ($user.LockedOut) { "Yes" } else { "No" }
+                'Last Logon' = [DateTime]::FromFileTime($user.LastLogon)
+                'Password Last Set' = [DateTime]::FromFileTime($user.PasswordLastSet)
+                'Bad Password Count' = $user.badPwdCount
+            }
+
+            $userReport | Format-Table -AutoSize
         } else {
             Write-Host "User not found."
         }
@@ -172,6 +194,7 @@ function Get-UserReport {
         Write-Host "An error occurred while generating the user report: $_"
     }
 }
+
 function Get-MyUserInfo {
     $currentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent()
     $user = Get-ADUser -Filter {SamAccountName -eq $currentUser.Name} -Properties DisplayName,UserPrincipalName
@@ -196,29 +219,75 @@ function Get-MyUserInfo {
     } else {
         Write-Host "User not found."
     }
+    } catch {
+    Write-Host "An error occurred while getting user info: $_"
+    }
+    function Build-OUTree {
+        param (
+            [string]$username
+        )
+    
+        try {
+            $user = Get-ADUser -Identity $username -Properties DistinguishedName
+            $ouTree = @()
+    
+            if ($user) {
+                $distinguishedName = $user.DistinguishedName
+                $ouPath = ($distinguishedName -split ",",2)[1]
+    
+                while ($ouPath -notmatch "^DC=") {
+                    $ou = Get-ADOrganizationalUnit -Filter {DistinguishedName -eq $ouPath}
+                    $ouTree += $ou.Name
+                    $ouPath = ($ouPath -split ",",2)[1]
+                }
+            }
+    
+            return $ouTree
+        } catch {
+            Write-Host "An error occurred while building the OU tree: $_"
+        }
+    }
+
+# Function to get the manager's display name based on the CN
+function Get-ManagerDisplayName {
+    param (
+        [string]$manager
+    )
+
+    try {
+        $managerUser = Get-ADUser -Identity $manager
+        if ($managerUser) {
+            return $managerUser.DisplayName
+        } else {
+            return "N/A"
+        }
+    } catch {
+        Write-Host "An error occurred while getting the manager's display name: $_"
+    }
 }
-function Build-OUTree($username, $depth = 0) {
-    $user = Get-ADUser -Identity $username
-    $userDN = $user.DistinguishedName
-    $ouHierarchy = $userDN -split "," | ForEach-Object {
-        $_ -replace "CN=", "" -replace "OU=", ""
+
+# Example of how to use the Get-ManagerDisplayName function
+# $managerDisplayName = Get-ManagerDisplayName $user.Manager
+# Write-Host "Manager: $user.Manager ($managerDisplayName)"
+
+#Logging functionality
+function Add-Log-Search {
+    param (
+        [string]$type,
+        [string]$name
+    )
+
+    try {
+        $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+        $logFolder = Join-Path -Path $env:TEMP -ChildPath "adsearch"
+        if (!(Test-Path -Path $logFolder)) {
+            New-Item -ItemType Directory -Path $logFolder | Out-Null
+        }
+        $logFilePath = Join-Path -Path $logFolder -ChildPath "logfile.txt"
+        Add-Content -Path $logFilePath -Value ("$timestamp - $type : $name")
+    } catch {
+        Write-Host "An error occurred while writing to the log file: $_"
     }
-    
-    $ouPath = ""
-    $ouTree = @()
-    
-    for ($i = 0; $i -lt $depth; $i++) {
-        $ouPath += "|   "
-    }
-    
-    $ouTree += "$ouPath|-- " + $ouHierarchy[0]
-    
-    for ($i = 1; $i -lt $ouHierarchy.Count; $i++) {
-        $ouPath += "|   "
-        $ouTree += "$ouPath|-- " + $ouHierarchy[$i]
-    }
-    
-    $ouTree
 }
 
 # Main program loop
@@ -248,8 +317,8 @@ Available Commands:
 "@
 
     $choice = Read-Host "Enter a command (1-8):"
-
-    switch ($choice) {
+    try {
+        switch ($choice) {
         '1' {
             $username = Read-Host "Enter the username:"
             Search-User $username
@@ -288,5 +357,8 @@ Available Commands:
         default {
             Write-Host "Invalid command. Try again."
         }
+    }
+    } catch {
+        Write-Host "An error occurred while executing the command: $_"
     }
 }
