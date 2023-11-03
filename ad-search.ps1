@@ -226,7 +226,9 @@ function Get-MyUserInfo {
         param (
             [string]$username
         )
-    
+        # Log the OU tree building operation
+        Add-Log-Search -type "OU Tree Building" -name $username
+
         try {
             $user = Get-ADUser -Identity $username -Properties DistinguishedName
             $ouTree = @()
