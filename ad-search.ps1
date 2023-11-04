@@ -3,10 +3,13 @@
 A script to use as a daily driver when troubleshooting or engaging with users during support.
 
 .DESCRIPTION
-This script is made to help during support or find infomation about users or group when troubleshooting for errors or similar.
-It is dependent on the Module "ActiveDirectory" and its cmdlets which is used to gather information and display it.
+This script is designed to assist in daily support tasks and troubleshooting by retrieving and displaying information about users or groups from Active Directory. It uses the "ActiveDirectory" module from RSAT Tools and its cmdlets to perform these tasks.
 
-More information can be found at https://github.com/clausmalver/AD-Search
+The script can retrieve details such as user names, group memberships, and other relevant attributes. It can also perform searches based on various criteria, making it a versatile tool for support and troubleshooting tasks.
+
+Please note that this script requires the "ActiveDirectory" module to be installed and available. If the module is not found, the script will provide a link to installation instructions.
+
+More detailed information can be found at https://github.com/clausmalver/AD-Search
 
 Thanks!
 
@@ -14,7 +17,7 @@ Thanks!
 Script Name: ad_search.ps1
 Author: Claus Malver
 Version: 0.6.5
-Last Modified: 2023-11-02
+Last Modified: 2023-11-03
 #>
 
 # Check if the ActiveDirectory module is available
@@ -364,6 +367,7 @@ Available Commands:
 6. Full report on an user
 7. Get a small report on your current user
 8. Get a "tree" structure of what OU's a user is a member of
+9.
 0. Exit
 "@
 
@@ -406,6 +410,19 @@ Available Commands:
                 Write-Host $_
             }
         }
+        # Keep getting errors using "here-strings ie. @" and "@
+        '9' {
+            Write-Host "1. Search for username: Enter a username to find in Active Directory along with multiple information about that user."
+            Write-Host "2. Search for EmployeeNumber: Enter an employee number to find in Active Directory."
+            Write-Host "3. Search for a group: Enter a group name to find in Active Directory and list basic information about that group."
+            Write-Host "4. List groups a specific user is a member of: Enter a username to see their group memberships."
+            Write-Host "5. List members of a group: Enter a group name to see its members."
+            Write-Host "6. Full report on a user: Enter a username to get a full report of their Active Directory information."
+            Write-Host "7. Get a small report on your current user: This will display a report of the currently logged in user's Active Directory information."
+            Write-Host "8. Get a 'tree' structure of what OU's a user is a member of: Enter a username to see the Organizational Units they belong to."
+            Write-Host "0. Exit: Exit the script."
+         }
+        
         '0' {
             exit
         }
