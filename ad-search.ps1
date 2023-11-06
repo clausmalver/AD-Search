@@ -38,38 +38,21 @@ function Search-User {
     try {
         $user = Get-ADUser -Filter {SamAccountName -eq $username} -Properties DisplayName,LastLogon,WhenCreated,Enabled,UserPrincipalName,EmailAddress,LockedOut,Manager,BadLogonCount
         if ($user) {
-            $fullName = $user.DisplayName
-            $lastLogon = [DateTime]::FromFileTime($user.LastLogon)
-            $creationDate = $user.WhenCreated
-            $enabled = $user.Enabled
-            $emailAddress = $user.EmailAddress
-            $lockedOut = if ($user.LockedOut) { "Locked Out" } else { "Not Locked Out" }
-            $manager = $user.Manager
-            $badlogoncount = $user.BadLogonCount
-
-            # Determine the account status
-            $accountStatus = if ($enabled) { "Enabled" } else { "Disabled" }
-
-            # Extract the manager's display name
-            $manager = $user.Manager
-            if ($manager) {
-                $managerUser = Get-ADUser -Identity $manager
-                $managerDisplayName = $managerUser.DisplayName
-            } else {
-                $managerDisplayName = "N/A"
+            $result = [PSCustomObject]@{
+                'Full Name' = $user.DisplayName
+                'Email Address' = $emailAddress
+                'Last Active' = $lastLogon
+                'Created' = $creationDate
+                'Account Status' = $accountStatus
+                'Locked Out Status' = $lockedOut
+                'Failed Logon Attempts' = $badlogoncount
+                'Manager' = "$manager ($managerDisplayName)"
             }
-
-            Write-Host "User: $fullName"
-            Write-Host "Email Address: $emailAddress"
-            Write-Host "Last Active: $lastLogon"
-            Write-Host "Created: $creationDate"
-            Write-Host "Account Status: $accountStatus"
-            Write-Host "Locked Out Status: $lockedOut"
-            Write-Host "Failed logon attempts: $badlogoncount"
-            Write-Host "Manager: $manager ($managerDisplayName)"
         } else {
-            Write-Host "User not found."
+            $result = "User not found."
         }
+    
+        return $result
     } catch {
         Write-Host "An error occurred while searching for the user: $_"
     }
@@ -379,9 +362,8 @@ try {
         '1' {
             $username = Read-Host "Enter the username:"
             $result = Search-User $username
-            if ($result) {
-                $result | Format-Table -AutoSize
-            }
+        }
+
         }
 
         '2' {
