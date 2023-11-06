@@ -61,7 +61,7 @@ function Search-User {
         Write-Host "An error occurred while searching for the user: $_"
     }
 }
-
+# Function to search for a group
 function Search-Group {
     param (
         [string]$groupname
@@ -85,7 +85,7 @@ function Search-Group {
         Write-Host "An error occurred while searching for the group: $_"
     }
 }
-
+# Function get user group memberships
 function Get-UserGroupsList {
     param (
         [string]$username
@@ -111,7 +111,7 @@ function Get-UserGroupsList {
         Write-Host "An error occurred while listing the user's groups: $_"
     }
 }
-
+# Function to get group members
 function Get-GroupMemberslist {
     param (
         [string]$groupname
@@ -138,7 +138,7 @@ function Get-GroupMemberslist {
         Write-Host "An error occurred while listing group members: $_"
     }
 }
-
+# Function to create a report for a user
 function Get-UserReport {
     param (
         [string]$username
@@ -177,7 +177,7 @@ function Get-UserReport {
         Write-Host "An error occurred while generating the user report: $_"
     }
 }
-
+# Function to build an organisation tree for a user
 function Get-OUTree {
     param (
         [string]$username
@@ -225,9 +225,9 @@ AD-Search - Active Directory
 Available Commands:
 1. Search for a user
 2. Search for a group
-3. Search for a users groupmembership
+3. Search for a user groupmemberships
 4. Search for members of a group
-5. Userreport for a user
+5. Create a report for a user
 6. Build organisation tree for a user
 
 0. Exit
