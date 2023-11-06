@@ -21,11 +21,11 @@ Last Modified: 2023-11-03
 #>
 
 # Check if the ActiveDirectory module is available
-if (-not (Get-Module -Name ActiveDirectory)) {
-    Write-Host "The ActiveDirectory module is not available. Please visit the following website for installation instructions:"
-    Write-Host "Website: https://github.com/clausmalver/AD-Search/blob/main/README.md"
-    exit
-}
+#if (-not (Get-Module -Name ActiveDirectory)) {
+#    Write-Host "The ActiveDirectory module is not available. Please visit the following website for installation instructions:"
+#    Write-Host "Website: https://github.com/clausmalver/AD-Search/blob/main/README.md"
+#    exit
+#}
 
 function Search-User {
     param (
@@ -344,7 +344,9 @@ function Add-Log-Search {
 }
 
 # Main program loop
-while ($true) {
+$continue = $true
+
+while ($continue) {
     Clear-Host
     Write-Host @"
     ___  ______          _____                           _     
@@ -379,9 +381,10 @@ Available Commands:
             Search-User $username
         }
         '2' {
-            $username = Read-Host "Enter the users employee number:"
+            $EmployeeNumber = Read-Host "Enter the user's employee number:"
             Search-UserByEmployeeNumber $EmployeeNumber
         }
+        
         '3' {
             $groupname = Read-Host "Enter the group name:"
             Search-Group $groupname
@@ -424,7 +427,7 @@ Available Commands:
          }
         
         '0' {
-            exit
+            $continue = $false
         }
         default {
             Write-Host "Invalid command. Try again."
