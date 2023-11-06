@@ -3,7 +3,7 @@ A powershell script utilizing AD cmdlets to search for information. This project
 
 Please feel free to use it as you please and modify it to make it suit your use case.
 
-You might need to use `set ExecutionPolicy Unrestricted` in a powershell terminal to get it work.
+You might need to `Set-ExecutionPolicy Unrestricted` or `Set-ExecutionPolicy -Scope CurrentUser Unrestricted` in a powershell terminal to get it work.
 
 Please note that the different attributes must be populated in the Active Directory for this script to work.
 
@@ -30,18 +30,3 @@ In this case you want the *Active Directory Domain Services and Lightweight Dire
 ```powershell
 Add-WindowsCapability -online -Name "<tool name>"
 ```
-
-## Logging
-There are a basic logging function in this script, the log will be saved at the `%temp%/adsearch/logfile.txt` which will look like:
-```
-2022-03-14 15:30:00 - User Search : <username>
-```
-The following functions will be logged:
-
-- Search for username
-- Search for an Employee number
-- Search for a group
-- List groups a specific user is a member of
-- List members of a group
-- Full report on an user
-- Get a "tree" structure of what OU's a user is a member of
