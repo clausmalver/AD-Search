@@ -373,62 +373,79 @@ Available Commands:
 0. Exit
 "@
 
-    $choice = Read-Host "Enter a command (1-8) or press 0 to exit:"
-    try {
-        switch ($choice) {
+$choice = Read-Host "Enter a command (1-8) or press 0 to exit:"
+try {
+    switch ($choice) {
         '1' {
             $username = Read-Host "Enter the username:"
-            Search-User $username
+            $result = Search-User $username
+            if ($result) {
+                $result | Format-Table -AutoSize
+            }
         }
+
         '2' {
             $EmployeeNumber = Read-Host "Enter the user's employee number:"
-            Search-UserByEmployeeNumber $EmployeeNumber
+            $result = Search-UserByEmployeeNumber $EmployeeNumber
+            if ($result) {
+                $result | Format-Table -AutoSize
+            }
         }
-        
+
         '3' {
             $groupname = Read-Host "Enter the group name:"
-            Search-Group $groupname
+            $result = Search-Group $groupname
+            if ($result) {
+                $result | Format-Table -AutoSize
+            }
         }
+
         '4' {
             $username = Read-Host "Enter the username:"
-            Get-UserGroupsList $username
+            $result = Get-UserGroupsList $username
+            if ($result) {
+                $result | Format-Table -AutoSize
+            }
         }
+
         '5' {
             $groupname = Read-Host "Enter the group name:"
-            Get-GroupMemberslist $groupname
+            $result = Get-GroupMemberslist $groupname
+            if ($result) {
+                $result | Format-Table -AutoSize
+            }
         }
+
         '6' {
-            $groupname = Read-Host "Enter the username for a full report:"
-            Get-UserReport $groupname
+            $username = Read-Host "Enter the username for a full report:"
+            $result = Get-UserReport $username
+            if ($result) {
+                $result | Format-Table -AutoSize
+            }
         }
+
         '7' {
-            Get-MyUserInfo
+            $result = Get-MyUserInfo
+            if ($result) {
+                $result | Format-Table -AutoSize
+            }
         }
+
         '8' {
             $username = Read-Host "Enter the username for OU tree structure:"
             $ouTree = Build-OUTree $username
-        
-            Write-Host "OU Tree Structure for User: $username"
-            $ouTree | ForEach-Object {
-                Write-Host $_
+            if ($ouTree) {
+                Write-Host "OU Tree Structure for User: $username"
+                $ouTree | ForEach-Object {
+                    Write-Host $_
+                }
             }
         }
-        # Keep getting errors using "here-strings ie. @" and "@
-        '9' {
-            Write-Host "1. Search for username: Enter a username to find in Active Directory along with multiple information about that user."
-            Write-Host "2. Search for EmployeeNumber: Enter an employee number to find in Active Directory."
-            Write-Host "3. Search for a group: Enter a group name to find in Active Directory and list basic information about that group."
-            Write-Host "4. List groups a specific user is a member of: Enter a username to see their group memberships."
-            Write-Host "5. List members of a group: Enter a group name to see its members."
-            Write-Host "6. Full report on a user: Enter a username to get a full report of their Active Directory information."
-            Write-Host "7. Get a small report on your current user: This will display a report of the currently logged in user's Active Directory information."
-            Write-Host "8. Get a 'tree' structure of what OU's a user is a member of: Enter a username to see the Organizational Units they belong to."
-            Write-Host "0. Exit: Exit the script."
-         }
-        
+
         '0' {
-            $continue = $false
+            $continue = $false  # Exit the loop
         }
+
         default {
             Write-Host "Invalid command. Try again."
         }
