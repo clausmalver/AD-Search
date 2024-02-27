@@ -177,34 +177,7 @@ function Get-UserReport {
         Write-Host "An error occurred while generating the user report: $_"
     }
 }
-# Function to build an organisation tree for a user
-function Get-OUTree {
-    param (
-        [string]$username
-    )
 
-    try {
-        $user = Get-ADUser -Identity $username -Properties DistinguishedName
-        $ouTree = @()
-        $level = 0
-
-        if ($user) {
-            $distinguishedName = $user.DistinguishedName
-            $ouPath = ($distinguishedName -split ",",2)[1]
-
-            while ($ouPath -notmatch "^DC=") {
-                $ou = Get-ADOrganizationalUnit -Filter {DistinguishedName -eq $ouPath}
-                $ouTree += (" " * $level + "|-- " + $ou.Name)
-                $ouPath = ($ouPath -split ",",2)[1]
-                $level += 2
-            }
-        }
-
-        return $ouTree -join "`n"
-    } catch {
-        Write-Host "An error occurred while building the OU tree: $_"
-    }
-}
 # Main program loop
 $continue = $true
 
@@ -228,7 +201,6 @@ Available Commands:
 3. Search for a user groupmemberships
 4. Search for members of a group
 5. Create a report for a user
-6. Build organisation tree for a user
 
 0. Exit
 "@
@@ -259,11 +231,6 @@ Available Commands:
         '5' {
             $username = Read-Host "Enter the name of the user"
             Get-UserReport $username
-            Read-Host "Press Enter to continue..."
-        }
-        '6' {
-            $username = Read-Host "Enter the username"
-            Get-OUTree $username
             Read-Host "Press Enter to continue..."
         }
 
