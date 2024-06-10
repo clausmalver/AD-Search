@@ -17,7 +17,7 @@ Thanks!
 Script Name: ad_search.ps1
 Author: Claus Malver
 Version: 0.6.5
-Last Modified: 2023-11-06
+Last Modified: 2024-06-10
 #>
 
 # Import the ActiveDirectory module
@@ -138,6 +138,42 @@ function Get-GroupMemberslist {
         Write-Host "An error occurred while listing group members: $_"
     }
 }
+# Function to get members of a specific office location
+# Function to get members of a specific office location whose usernames start with "N1"
+function Get-OfficeLocationMembersList {
+    param (
+        [string]$officeLocation
+    )
+
+    try {
+        # Retrieve users based on office location
+        $users = Get-ADUser -Filter {Office -eq $officeLocation} -Property SamAccountName, DisplayName, EmailAddress
+
+        if ($users) {
+            # Filter users whose usernames start with "N1"
+            $filteredUsers = $users | Where-Object { $_.SamAccountName -like "N1*" }
+
+            if ($filteredUsers) {
+                $members = $filteredUsers | ForEach-Object {
+                    [PSCustomObject]@{
+                        'Username'  = $_.SamAccountName
+                        'Full Name' = $_.DisplayName
+                        'Email'     = $_.EmailAddress
+                    }
+                }
+
+                $members | Format-Table -AutoSize
+            } else {
+                Write-Host "No users found with usernames starting with 'N1' in the specified office location."
+            }
+        } else {
+            Write-Host "No users found for the specified office location."
+        }
+    } catch {
+        Write-Host "An error occurred while listing office location members: $_"
+    }
+}
+
 # Function to create a report for a user
 function Get-UserReport {
     param (
@@ -200,7 +236,8 @@ Available Commands:
 2. Search for a group
 3. Search for a user groupmemberships
 4. Search for members of a group
-5. Create a report for a user
+5. Search for members of an Office Location
+6. Create a report for a user
 
 0. Exit
 "@
@@ -229,6 +266,11 @@ Available Commands:
             Read-Host "Press Enter to continue..."
         }
         '5' {
+            $officeLocation = Read-Host "Enter the name of the Office Location"
+            Get-OfficeLocationMembersList $officeLocation
+            Read-Host "Press Enter to continue..."
+        }
+        '6' {
             $username = Read-Host "Enter the name of the user"
             Get-UserReport $username
             Read-Host "Press Enter to continue..."
